@@ -153,13 +153,14 @@ class ReportParser:
         logging.debug(f"Getting org id for {org_name}")
         self.cursor.execute("SELECT id FROM organizations WHERE name = %s", (org_name,))
         result = self.cursor.fetchall()
-        if not result:
+        logging.debug(f"Org id search result: {result}")
+        if not len(result):
             logging.debug(f"Adding {org_name} to db")
             self.cursor.execute("INSERT INTO organizations (name) VALUES (%s)", (org_name,))
             self.db.commit()
             result = self.cursor.lastrowid
         else:
-            result = result[0]
+            result = result[0][0]
         logging.debug(f"Result: {result}")
         return result
 
@@ -167,13 +168,14 @@ class ReportParser:
         logging.debug(f"Getting domain id for {domain_name}")
         self.cursor.execute("SELECT id FROM domains WHERE domain = %s", (domain_name,))
         result = self.cursor.fetchall()
-        if not result:
+        logging.debug(f"domain id search Result: {result}")
+        if not len(result):
             logging.debug(f"Adding {domain_name} to db")
             self.cursor.execute("INSERT INTO domains (domain) VALUES (%s)", (domain_name,))
             self.db.commit()
             result = self.cursor.lastrowid
         else:
-            result = result[0]
+            result = result[0][0]
         logging.debug(f"Result: {result}")
         return result
 
