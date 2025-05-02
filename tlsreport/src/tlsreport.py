@@ -12,18 +12,19 @@ import dateutil.parser
 class ReportParser:
     def __init__(self,
                  imapserver: str, imapuser: str, imappass: str, imapfolder: str,
-                 dbserver: str, dbuser: str, dbpass: str, db: str):
-        self.server = imapserver
-        self.username = imapuser
-        self.password = imappass
-        self.folder = imapfolder
+                 dbserver: str, dbuser: str, dbpass: str, database: str):
+        self.imapserver = imapserver
+        self.imapuser = imapuser
+        self.imappass = imappass
+        self.imapfolder = imapfolder
         self.dbserver = dbserver
         self.dbuser = dbuser
         self.dbpass = dbpass
-        self.db = db
+        self.dbdatabase = database
 
         # connect to database
         db_tries = 10
+        # Since the db container needs some time to be ready we try a few times before giving up
         while db_tries > 0:
             db_tries -= 1
             try:
@@ -31,7 +32,7 @@ class ReportParser:
                     host=self.dbserver,
                     user=self.dbuser,
                     password=self.dbpass,
-                    database=self.db,
+                    database=self.dbdatabase,
                     connect_timeout=1,
                     buffered=True,
                 )
@@ -39,20 +40,20 @@ class ReportParser:
                 logging.error(err)
                 time.sleep(5)
             else:
-                logging.debug(f'Connected to database: {self.db.database}')
+                logging.info(f'Connected to database: {self.db.database}')
                 self.cursor = self.db.cursor()
-                # self.init_db()
                 break
         if not self.db.database:
+            logging.error('Could not connect to database')
             exit(1)
 
     def get_mails(self):
         # Connecting to server
-        mailbox = imaplib.IMAP4_SSL(self.server)
+        mailbox = imaplib.IMAP4_SSL(self.imapserver)
         # logging in
-        mailbox.login(self.username, self.password)
+        mailbox.login(self.imapuser, self.imappass)
         # Opening mailbox
-        mailbox.select(self.folder)
+        mailbox.select(self.imapfolder)
         # Search for messages
         status, messages = mailbox.search(
             None,
@@ -188,7 +189,7 @@ class ProcessKiller:
         signal.signal(signal.SIGINT, self.kill)
         signal.signal(signal.SIGTERM, self.kill)
 
-    def kill(self, signum, frame):
+    def kill(self, signum, _frame):
         logging.info(f'Caught signal {signum}, terminating')
         self.killme = True
 
