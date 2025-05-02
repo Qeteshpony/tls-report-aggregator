@@ -1,0 +1,16 @@
+apiVersion: 1
+
+datasources:
+- name: mysql
+  type: mysql
+  url: db:3306
+  user: grafana
+  isDefault: true
+  jsonData:
+    database: tlsreport
+    maxOpenConns: 100
+    maxIdleConns: 100
+    maxIdleConnsAuto: true
+    connMaxLifetime: 14400
+  secureJsonData:
+    password: grafana
